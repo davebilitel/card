@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homepage</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f9;
+        }
+        .container {
+            text-align: center;
+        }
+        .buttons {
+            display: flex;
+            flex-direction: column; /* Default vertical layout */
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #007BFF;
+            color: white;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        /* Responsive Styles for Mobile */
+        @media (max-width: 768px) {
+            .buttons {
+                flex-direction: row; /* Horizontal layout for smaller screens */
+                flex-wrap: wrap;
+                gap: 5px;
+            }
+            button {
+                flex: 1 1 auto;
+                min-width: 30%; /* Adjust the button width */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to Our Service</h1>
+        <div class="buttons">
+            <button onclick="window.location.href='/card'">Card</button>
+            <button onclick="window.location.href='/balance'">Balance</button>
+            <button onclick="window.location.href='/topup'">Top Up</button>
+        </div>
+    </div>
+</body>
+</html>
