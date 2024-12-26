@@ -163,7 +163,7 @@ app.post('/send-balance', async (req, res) => {
         },
     });
 
-    // Email content
+    // Updated Email Content with Buttons
     const balanceHTML = `
         <div style="max-width: 600px; margin: auto; font-family: Arial, sans-serif; background-color: #f9f9f9; border: 1px solid #ddd; padding: 20px; border-radius: 10px;">
             <p style="text-align: center; font-size: 1rem; color: #333;">Your virtual card balance is:</p>
@@ -172,6 +172,10 @@ app.post('/send-balance', async (req, res) => {
             </div>
             <footer style="margin-top: 20px; text-align: center; font-size: 0.9em; color: #555;">
                 <p>Visit our website: <a href="https://oragpay.com" style="color: #007BFF;">Our Website</a></p>
+                <div style="margin-top: 10px;">
+                    <a href="https://bilitech.io/ivcc/recharge" style="display: inline-block; padding: 10px 15px; margin: 5px; color: white; background-color: #28a745; text-decoration: none; border-radius: 5px;">Top Up</a>
+                    <a href="https://oragpay.com/guide" style="display: inline-block; padding: 10px 15px; margin: 5px; color: white; background-color: #007BFF; text-decoration: none; border-radius: 5px;">More Info</a>
+                </div>
             </footer>
         </div>
     `;
@@ -191,6 +195,7 @@ app.post('/send-balance', async (req, res) => {
         res.status(500).send('<script>alert("Error sending balance email."); window.location="/balance";</script>');
     }
 });
+
 
 // Render the top-up form
 app.get('/topup', (req, res) => {
