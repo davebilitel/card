@@ -25,25 +25,53 @@ function generateBillingAddress() {
     return `${streetAddress}, ${city}, ${state} ${zip}`;
 }
 
-// Function to generate a PDF with card information
+// Function to generate a PDF styled as a physical card
 async function generatePDF(cardName, cardNumber, expiryDate, cvv, billingAddress) {
     const doc = new jsPDF();
 
-    // Add cardholder details
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(16);
-    doc.text(`Cardholder Name: ${cardName}`, 20, 30);
-    doc.setFontSize(14);
-    doc.text(`Card Number: ${cardNumber.replace(/(.{4})/g, '$1 ')}`, 20, 40);
-    doc.text(`Expiry Date: ${expiryDate}`, 20, 50);
-    doc.text(`CVV: ${cvv}`, 20, 60);
-    doc.text(`Billing Address: ${billingAddress}`, 20, 80);
+    // Add logo at the top
+    const logoPath = path.join(__dirname, 'public', 'images', 'logo.png');
+    if (fs.existsSync(logoPath)) {
+        const logoData = fs.readFileSync(logoPath).toString('base64');
+        doc.addImage(logoData, 'PNG', 80, 10, 50, 20); // Center the logo at the top
+    }
 
-    // Save the PDF
+    // Draw card background
+    doc.setFillColor(0, 102, 204); // Blue background
+    doc.roundedRect(15, 40, 180, 100, 10, 10, 'F'); // Rounded rectangle for the card
+
+    // Add cardholder details on the card
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(255, 255, 255); // White text
+    doc.setFontSize(16);
+    doc.text(cardName, 25, 60); // Cardholder name
+
+    // Card number
+    doc.setFontSize(18);
+    doc.text(cardNumber.replace(/(.{4})/g, '$1 '), 25, 80); // Format card number in groups of 4
+
+    // Expiry Date
+    doc.setFontSize(12);
+    doc.text(`Expiry: ${expiryDate}`, 25, 100);
+
+    // CVV
+    doc.text(`CVV: ${cvv}`, 150, 100); // Place CVV on the right side
+
+    // Add Billing Address below the card
+    doc.setTextColor(0, 0, 0); // Black text for billing address
+    doc.setFontSize(10);
+    doc.text('Billing Address:', 15, 160);
+    doc.text(billingAddress, 15, 170);
+
+    // Add copyright at the bottom
+    doc.setFontSize(10);
+    doc.text('© 2024 Your Company Name. All rights reserved.', 15, 280);
+
     const pdfPath = path.join(__dirname, 'card-information.pdf');
     await doc.save(pdfPath);
     return pdfPath;
 }
+
 
 // Render the homepage
 app.get('/', (req, res) => {
@@ -108,6 +136,109 @@ app.post('/submit', async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).send('<script>alert("Error sending email."); window.location="/";</script>');
+    }
+});
+
+// Render the balance form
+app.get('/balance', (req, res) => {
+    res.render('balance-form');
+});
+
+// Handle balance form submission
+app.post('/send-balance', async (req, res) => {
+    const { user_email, balance } = req.body;
+
+    // Ensure balance has two decimal places
+    const formattedBalance = parseFloat(balance).toFixed(2);
+
+    // Configure Nodemailer
+    const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        host: 'smtp.gmail.com',
+        port: '587',
+        secure: false,
+        auth: {
+            user: process.env.EMAIL,
+            pass: process.env.EMAIL_PASSWORD,
+        },
+    });
+
+    // Email content
+    const balanceHTML = `
+        <div style="max-width: 600px; margin: auto; font-family: Arial, sans-serif; background-color: #f9f9f9; border: 1px solid #ddd; padding: 20px; border-radius: 10px;">
+            <p style="text-align: center; font-size: 1rem; color: #333;">Your virtual card balance is:</p>
+            <div style="background-color: #007BFF; color: white; border-radius: 10px; padding: 20px; text-align: center;">
+                <h3 style="margin: 0; font-size: 2em;">$${formattedBalance}</h3>
+            </div>
+            <footer style="margin-top: 20px; text-align: center; font-size: 0.9em; color: #555;">
+                <p>Visit our website: <a href="https://oragpay.com" style="color: #007BFF;">Our Website</a></p>
+            </footer>
+        </div>
+    `;
+
+    const mailOptions = {
+        from: process.env.EMAIL,
+        to: user_email,
+        subject: 'Your Virtual Card Balance',
+        html: balanceHTML,
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        res.redirect('/success'); // Redirect to success page
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('<script>alert("Error sending balance email."); window.location="/balance";</script>');
+    }
+});
+
+// Render the top-up form
+app.get('/topup', (req, res) => {
+    res.render('topup-form');
+});
+
+// Handle top-up form submission
+app.post('/send-topup', async (req, res) => {
+    const { user_email, amount } = req.body;
+
+    // Ensure amount has two decimal places
+    const formattedAmount = parseFloat(amount).toFixed(2);
+
+    // Configure Nodemailer
+    const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        host: 'smtp.gmail.com',
+        port: '587',
+        secure: false,
+        auth: {
+            user: process.env.EMAIL,
+            pass: process.env.EMAIL_PASSWORD,
+        },
+    });
+
+    // Email content
+    const topupHTML = `
+        <div style="max-width: 600px; margin: auto; font-family: Arial, sans-serif; background-color: #f9f9f9; border: 1px solid #ddd; padding: 20px; border-radius: 10px;">
+            <p style="text-align: center; font-size: 1rem; color: #333; font-weight: bold;">$${formattedAmount} was successfully added to your card.</p>
+            <footer style="margin-top: 20px; text-align: center; font-size: 0.9em; color: #555;">
+                <p>Visit our website: <a href="https://oragpay.com" style="color: #007BFF;">Our Website</a></p>
+            </footer>
+        </div>
+    `;
+
+    const mailOptions = {
+        from: process.env.EMAIL,
+        to: user_email,
+        subject: 'Top-Up Successful',
+        html: topupHTML,
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        res.redirect('/success'); // Redirect to success page
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('<script>alert("Error sending top-up email."); window.location="/topup";</script>');
     }
 });
 
