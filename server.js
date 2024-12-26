@@ -144,7 +144,6 @@ app.get('/balance', (req, res) => {
     res.render('balance-form');
 });
 
-// Handle balance form submission
 app.post('/send-balance', async (req, res) => {
     const { user_email, balance } = req.body;
 
